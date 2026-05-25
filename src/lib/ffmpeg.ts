@@ -2,7 +2,7 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import { EditRecipe, ExportResult } from "./types";
 import { getPresetById } from "./presets";
-
+import { simd } from "wasm-feature-detect";
 
 const CORE_BASE_URL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd";
 
@@ -41,7 +41,10 @@ export async function loadFFmpeg(signal?: AbortSignal,
 
     ffmpeg.on("progress", handleProgress);
     // Check if the user's browser supports WebAssembly SIMD
-    const coreName = "ffmpeg-core";
+    const isSimdSupported = await simd();
+
+    // Dynamically set the core filename
+    const coreName = isSimdSupported ? "ffmpeg-core-simd" : "ffmpeg-core";
 
     // Load FFmpeg using the dynamic URLs + the new signal parameter
     await ffmpeg.load({
@@ -305,4 +308,4 @@ export async function exportVideo(
       }
     }
   }
-}
+}
